@@ -1,0 +1,4 @@
+import test from 'node:test';import assert from 'node:assert/strict';import ts from 'typescript';import {readFileSync} from 'node:fs';
+const code=ts.transpileModule(readFileSync(new URL('../lib/supabase-response.ts',import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.ESNext}}).outputText;
+const {parseSupabaseResponse}=await import(`data:text/javascript;base64,${Buffer.from(code).toString('base64')}`);
+test('successful void RPCs do not turn committed changes into API errors',async()=>{assert.equal(await parseSupabaseResponse(new Response(null,{status:204})),null);assert.equal(await parseSupabaseResponse(new Response('')) ,null);assert.deepEqual(await parseSupabaseResponse(Response.json({ok:true})),{ok:true});await assert.rejects(parseSupabaseResponse(new Response('private error',{status:403})),/Access denied/)});

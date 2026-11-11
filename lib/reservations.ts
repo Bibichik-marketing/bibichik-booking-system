@@ -1,0 +1,4 @@
+import { z } from 'zod';
+export const malaysiaToday = () => new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kuala_Lumpur',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+export const selectionSchema = z.object({outletId:z.enum(['bibichik-ss2','bibichik-sunway-163']),date:z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(v=>!Number.isNaN(Date.parse(v)) && v>=malaysiaToday()),guests:z.coerce.number().int().min(1).max(10)});
+export const reservationSchema = selectionSchema.extend({id:z.string().uuid(),slotId:z.string().uuid(),name:z.string().trim().min(2).max(100),phone:z.string().transform(v=>v.replace(/[\s()-]/g,'')).refine(v=>/^(?:\+?60|0)1\d{8,9}$/.test(v)),email:z.union([z.string().email().max(254),z.literal('')]),requests:z.string().trim().max(1000),consent:z.literal(true)}).strict();

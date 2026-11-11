@@ -1,0 +1,11 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import ts from 'typescript';
+import {readFileSync} from 'node:fs';
+const source=readFileSync(new URL('../lib/reservations.ts',import.meta.url),'utf8');
+const compiled=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText.replace(/from ['"]zod['"]/,`from '${import.meta.resolve('zod')}'`);
+const {reservationSchema}=await import(`data:text/javascript;base64,${Buffer.from(compiled).toString('base64')}`);
+const valid={id:'5fd6d408-0c80-4c29-8278-ecf37ed454d2',slotId:'c7859bf7-3969-4643-a905-bec8cc6483ca',outletId:'bibichik-ss2',date:'2099-01-01',guests:2,name:'Test Guest',phone:'012-345 6789',email:'',requests:'',consent:true};
+test('valid booking normalizes mobile and accepts optional email',()=>{assert.equal(reservationSchema.parse(valid).phone,'0123456789')});
+test('rejects invalid party sizes, outlets and past dates',()=>{for(const patch of [{guests:0},{guests:11},{outletId:'other'},{date:'2000-01-01'}])assert.equal(reservationSchema.safeParse({...valid,...patch}).success,false)});
+test('rejects missing consent, malformed phone and extra privileged fields',()=>{for(const patch of [{consent:false},{phone:'123'},{status:'Confirmed'}])assert.equal(reservationSchema.safeParse({...valid,...patch}).success,false)});

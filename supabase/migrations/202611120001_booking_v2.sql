@@ -29,6 +29,7 @@ alter table public.reservations add column scheduled_end_at timestamptz;
 alter table public.reservations add column pending_expires_at timestamptz;
 alter table public.reservations add column confirmation_before timestamptz;
 alter table public.reservations add column customer_first_name text;
+alter table public.reservations add column recovery_phone_hash text;
 alter table public.reservations add column released_at timestamptz;
 alter table public.reservations add column created_by uuid;
 alter table public.reservations add column confirmed_by uuid;
@@ -96,15 +97,16 @@ begin
  or extract(second from t)<>0 or mod(extract(minute from t)::integer,30)<>0 then raise exception 'Unbookable arrival';end if;
  if not ((t>=first_time and t<=o.last_lunch) or (t>=o.dinner_start and t<=o.last_dinner)) then raise exception 'Outside service';end if;
  if exists(select 1 from booking_private.closures where outlet_id=outlet and active and starts_at<arrival+interval '120 minutes' and ends_at>arrival) then raise exception 'Special closure';end if;
- if channel='Phone' then if arrival-decision<interval '30 minutes' then raise exception 'Phone lead time';end if;return arrival;end if;
+ if arrival-decision<interval '30 minutes' then raise exception 'Submission lead time';end if;
+ if channel='Phone' then return (case when t=first_time then arrival+interval '16 minutes' when t=first_time+interval '30 minutes' then arrival+interval '1 minute' else arrival-interval '30 minutes' end);end if;
  if t=first_time then
- -- Submission cutoff is minute-inclusive; explicit implementation boundary documented.
- if decision>=arrival-interval '30 minutes'+interval '1 minute' then raise exception 'Submission closed';end if;
+ -- Submission lead time is exact, independently of approval grace.
+ if decision>arrival-interval '30 minutes' then raise exception 'Submission closed';end if;
  cutoff:=arrival+interval '16 minutes';
  elsif t=first_time+interval '30 minutes' then
- if decision>=arrival-interval '30 minutes'+interval '1 minute' then raise exception 'Submission closed';end if;
+ if decision>arrival-interval '30 minutes' then raise exception 'Submission closed';end if;
  cutoff:=arrival+interval '1 minute';
- else cutoff:=arrival-interval '29 minutes';
+ else cutoff:=arrival-interval '30 minutes';
  if booking_private.review_until(outlet,decision,60)>cutoff then raise exception 'Insufficient review time';end if;
  end if;
  return cutoff;
@@ -141,9 +143,10 @@ begin
  select id into slot from public.reservation_slots where outlet_id=outlet and starts_at=arrival;
  if slot is null then insert into public.reservation_slots(outlet_id,starts_at,ends_at,period,capacity,enabled) values(outlet,arrival,arrival+interval '120 minutes',case when (arrival at time zone 'Asia/Kuala_Lumpur')::time<time '16:30' then 'Lunch' else 'Dinner' end,1,false) returning id into slot;end if;
  expiry:=least(booking_private.review_until(outlet,decision,120),cutoff);
+ if not confirm_now and expiry<=decision then raise exception 'No Pending review time remains; explicit immediate phone confirmation required';end if;
  insert into public.reservations(id,slot_id,outlet_id,customer_name,customer_first_name,phone,email,reservation_date,reservation_time,guests,special_requests,status,request_payload,scheduled_start_at,scheduled_end_at,pending_expires_at,confirmation_before,created_by,confirmed_by,source,v2)
  values((payload->>'id')::uuid,slot,outlet,payload->>'name',nullif(payload->>'firstName',''),payload->>'phone',nullif(payload->>'email',''),(payload->>'date')::date,(payload->>'time')::time,(payload->>'guests')::integer,payload->>'requests',case when channel='Phone' and confirm_now then 'Confirmed' else 'Pending' end,payload,arrival,arrival+interval '120 minutes',expiry,cutoff,actor,case when confirm_now then actor end,channel,true) returning * into r;
- update public.reservations set rules_version=(select rules_version from booking_private.outlets where id=outlet) where id=r.id;
+ update public.reservations set recovery_phone_hash=encode(sha256(convert_to(r.phone,'UTF8')),'hex'),rules_version=(select rules_version from booking_private.outlets where id=outlet) where id=r.id;
  insert into booking_private.events(reservation_id,outlet_id,event,actor,details) values(r.id,outlet,r.status,actor,jsonb_build_object('rulesVersion',(select rules_version from booking_private.outlets where id=outlet)));
  if token_hash is not null then
  if token_hash !~ '^[a-f0-9]{64}$' then raise exception 'Invalid token hash';end if;
@@ -213,17 +216,51 @@ create function public.booking_status_v2(token_hash text) returns jsonb language
  from booking_private.status_tokens t join public.reservations r on r.id=t.reservation_id
  where t.token_hash=booking_status_v2.token_hash and t.revoked_at is null and t.expires_at>clock_timestamp()
 $$;
+create table booking_private.link_verifications(
+ id uuid primary key default gen_random_uuid(),reservation_id uuid not null references public.reservations,
+ actor uuid not null,phone_hash text not null,booking_version bigint not null,
+ method text not null check(method in ('original_phone_callback','original_whatsapp_reply')),
+ evidence_ref uuid not null,created_at timestamptz not null,expires_at timestamptz not null,consumed_at timestamptz
+);
+-- This is an attributed manual attestation, NOT proof of phone possession.
+create function public.staff_record_link_verification_v2(booking_id uuid,expected_version bigint,method text,evidence_ref uuid) returns uuid language plpgsql security definer set search_path='' as $$
+declare r public.reservations%rowtype;actor uuid;verification uuid;decision timestamptz;
+begin
+ select * into r from public.reservations where id=booking_id;actor:=booking_private.staff(r.outlet_id);perform booking_private.lock_outlet(r.outlet_id);
+ select * into r from public.reservations where id=booking_id for update;decision:=clock_timestamp();
+ if not r.v2 or r.row_version<>expected_version or r.recovery_phone_hash is distinct from encode(sha256(convert_to(r.phone,'UTF8')),'hex') then raise exception 'Recovery contact requires Admin reconciliation';end if;
+ if method is null or method not in ('original_phone_callback','original_whatsapp_reply') or evidence_ref is null then raise exception 'Original phone workflow required';end if;
+ insert into booking_private.link_verifications(reservation_id,actor,phone_hash,booking_version,method,evidence_ref,created_at,expires_at) values(r.id,actor,r.recovery_phone_hash,r.row_version,method,evidence_ref,decision,decision+interval '10 minutes') returning id into verification;
+ insert into booking_private.events(reservation_id,outlet_id,event,actor,details) values(r.id,r.outlet_id,'Recovery manually attested',actor,jsonb_build_object('verificationId',verification,'method',method,'evidenceRef',evidence_ref,'assurance','staff_attestation_not_possession_proof'));
+ return verification;
+end $$;
+create function public.staff_regenerate_link_v2(booking_id uuid,verification_id uuid,token_hash text) returns text language plpgsql security definer set search_path='' as $$
+declare r public.reservations%rowtype;v booking_private.link_verifications%rowtype;actor uuid;decision timestamptz;
+begin
+ select * into r from public.reservations where id=booking_id;actor:=booking_private.staff(r.outlet_id);perform booking_private.lock_outlet(r.outlet_id);
+ select * into r from public.reservations where id=booking_id for update;decision:=clock_timestamp();
+ select * into v from booking_private.link_verifications where id=verification_id for update;
+ if not found or v.reservation_id<>r.id or v.actor<>actor or v.consumed_at is not null or v.expires_at<=decision or v.booking_version<>r.row_version or v.phone_hash is distinct from r.recovery_phone_hash or v.phone_hash is distinct from encode(sha256(convert_to(r.phone,'UTF8')),'hex') then raise exception 'Original phone verification required';end if;
+ if r.phone !~ '^(0|\+?60)(11[0-9]{8}|1[02-9][0-9]{7})$' then raise exception 'Registered mobile requires Admin reconciliation';end if;
+ if token_hash is null or token_hash !~ '^[a-f0-9]{64}$' then raise exception 'Invalid token hash';end if;
+ if ((r.reservation_date+1)+time '00:00') at time zone 'Asia/Kuala_Lumpur'<=decision then raise exception 'Reservation link date expired';end if;
+ insert into booking_private.status_tokens values(r.id,token_hash,((r.reservation_date+1)+time '00:00') at time zone 'Asia/Kuala_Lumpur',null) on conflict(reservation_id) do update set token_hash=excluded.token_hash,expires_at=excluded.expires_at,revoked_at=null;
+ update booking_private.link_verifications set consumed_at=decision where id=v.id;
+ insert into booking_private.events(reservation_id,outlet_id,event,actor,details) values(r.id,r.outlet_id,'Link regenerated',actor,jsonb_build_object('verificationId',v.id,'delivery','manual_original_registered_whatsapp','assurance','staff_attestation_not_possession_proof'));
+ return r.phone;
+end $$;
+-- Legacy 3-argument endpoint can revoke, never regenerate or bypass verification.
 create function public.staff_link_v2(booking_id uuid,operation text,token_hash text default null) returns void language plpgsql security definer set search_path='' as $$
 declare r public.reservations%rowtype;actor uuid;
 begin
+ if operation is distinct from 'revoke' then raise exception 'Original phone workflow required';end if;
  select * into r from public.reservations where id=booking_id;actor:=booking_private.staff(r.outlet_id);perform booking_private.lock_outlet(r.outlet_id);
- select * into r from public.reservations where id=booking_id for update;
- if operation='revoke' then update booking_private.status_tokens set revoked_at=clock_timestamp() where reservation_id=r.id;
- elsif operation='regenerate' and token_hash ~ '^[a-f0-9]{64}$' then
- insert into booking_private.status_tokens values(r.id,token_hash,((r.reservation_date+1)+time '00:00') at time zone 'Asia/Kuala_Lumpur',null) on conflict(reservation_id) do update set token_hash=excluded.token_hash,expires_at=excluded.expires_at,revoked_at=null;
- else raise exception 'Invalid operation';end if;
- insert into booking_private.events(reservation_id,outlet_id,event,actor) values(r.id,r.outlet_id,'Link '||operation,actor);
+ update booking_private.status_tokens set revoked_at=clock_timestamp() where reservation_id=r.id;
+ insert into booking_private.events(reservation_id,outlet_id,event,actor) values(r.id,r.outlet_id,'Link revoked',actor);
 end $$;
+alter table booking_private.link_verifications enable row level security;
+revoke all on function public.staff_record_link_verification_v2(uuid,bigint,text,uuid),public.staff_regenerate_link_v2(uuid,uuid,text) from public,anon,authenticated,service_role;
+grant execute on function public.staff_record_link_verification_v2(uuid,bigint,text,uuid),public.staff_regenerate_link_v2(uuid,uuid,text) to authenticated;
 create function public.staff_settings_v2(outlet text,changes jsonb default null) returns jsonb language plpgsql security definer set search_path='' as $$
 declare actor uuid;peak integer;
 begin
@@ -262,10 +299,13 @@ begin
  actor:=booking_private.staff(r.outlet_id,changes?'phone');perform booking_private.lock_outlet(r.outlet_id);decision:=clock_timestamp();
  select * into r from public.reservations where id=booking_id for update;
  if not r.v2 or r.row_version<>expected_version or r.status not in ('Pending','Confirmed') or (r.status='Pending' and r.pending_expires_at<=decision) then raise exception 'Stale or terminal reservation';end if;
+ if r.status='Confirmed' and decision>=r.scheduled_start_at and (changes?'date' or changes?'time' or changes?'guests') then raise exception 'Started commitment cannot be rescheduled or resized; create a separate booking';end if;
  if changes?'outletId' then raise exception 'Outlet transfer not supported';end if;
  arrival:=case when changes?'date' or changes?'time' then (coalesce(changes->>'date',r.reservation_date::text)::date+coalesce(changes->>'time',r.reservation_time::text)::time) at time zone 'Asia/Kuala_Lumpur' else r.scheduled_start_at end;
  party:=coalesce((changes->>'guests')::integer,r.guests);
+ if changes?'date' or changes?'time' or changes?'guests' then
  cutoff:=booking_private.validate_arrival(r.outlet_id,arrival,decision,case when r.status='Confirmed' then 'Phone' else r.source end);
+ else cutoff:=r.confirmation_before;end if;
  if not booking_private.capacity(r.outlet_id,arrival,party,decision,r.id) then raise exception 'Capacity exceeded';end if;
  if changes?'phone' and changes->>'phone' !~ '^(\+?60|0)1[0-9]{8,9}$' then raise exception 'Invalid phone';end if;
  update public.reservations set scheduled_start_at=arrival,scheduled_end_at=arrival+interval '120 minutes',reservation_date=(arrival at time zone 'Asia/Kuala_Lumpur')::date,reservation_time=(arrival at time zone 'Asia/Kuala_Lumpur')::time,guests=party,phone=coalesce(changes->>'phone',phone),confirmation_before=case when r.status='Pending' then least(r.confirmation_before,cutoff) else confirmation_before end,pending_expires_at=case when r.status='Pending' then least(r.pending_expires_at,cutoff) else pending_expires_at end,row_version=row_version+1 where id=r.id;

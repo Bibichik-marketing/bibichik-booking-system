@@ -1,6 +1,6 @@
 # UI design review
 
-Run npm run dev -- --hostname 127.0.0.1 --port 3197.
+Run npm run dev:local -- --hostname 127.0.0.1 --port 3197.
 
 Customer: http://127.0.0.1:3197/en/reserve?demo=1
 Staff: http://127.0.0.1:3197/staff?demo=1

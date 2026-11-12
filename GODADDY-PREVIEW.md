@@ -10,7 +10,7 @@ This branch contains V2 and is NOT main. Do not enable branch deployment or merg
 - Build uses `next build --webpack`; no Turbopack compiler is used.
 - Start: `npm start` (equivalently `node scripts/start-production.mjs`).
 - Start requires an existing `.next/BUILD_ID`, forces NODE_ENV=production, honours the host's PORT and binds 0.0.0.0. It never builds at runtime or falls back to next dev.
-- Local development remains `npm run dev`; it refuses NODE_ENV=production.
+- Local watch development uses `npm run dev:local`; it refuses NODE_ENV=production. The platform-compatible `npm run dev` alias starts compiled production.
 - Use a Node-capable persistent hosting service meeting package.json engines; static-only hosting cannot run this app.
 - Keep node_modules, `.next` build output and public assets in the SAME deployed application release. Do not commit them to Git. If the host separates build/runtime stages it must carry these artifacts and production dependencies forward. Keep build dependencies during build; TypeScript/Tailwind are needed then.
 - Do not solve development-compiler errors by chmod 777, running as root, or making the full application directory world-writable. Production Next.js may still require designated cache/temp write access depending on hosting/features.
@@ -26,3 +26,12 @@ This branch contains V2 and is NOT main. Do not enable branch deployment or merg
 
 ## What remains external
 Actual GoDaddy effective command, filesystem policy, artifact persistence, restart/health settings and server logs must be inspected on the platform. This document supplies precise commands, not an assertion that those settings were changed. No deployment has been performed.
+
+## Confirmed development-entrypoint compatibility correction
+No .airo/config.json exists in this repository. No authoritative public schema for that file was available, so no guessed platform configuration was added. If the hosted import contains an injected .airo/config.json, obtain its sanitized command/dependency settings and compare separately; do not assume it matches this checkout.
+
+GoDaddy diagnosis confirms Preview invokes the development package script. `npm run dev` now aliases `npm start`, so the mistakenly selected Preview script starts only the compiled production server. Build remains a separate `npm run build` phase; no runtime build or watch compiler is used. Explicit local `npm run preview` builds once and starts. A missing production build prevents startup. Actual local watch development is now `npm run dev:local`. Both build and start force NODE_ENV=production, even when the platform supplies development. If the platform invokes `next dev` directly rather than the package script, its effective command must still be changed by GoDaddy; this repository cannot override a hardcoded external command.
+
+GoDaddy documents production-dependencies-only installation before build/start. Required Tailwind/PostCSS, TypeScript and type packages are therefore in dependencies and recorded in package-lock.json; test-only PostgreSQL tools and lint dependencies remain devDependencies. Build: npm run build. Runtime: npm start. If Preview insists on npm run dev after its build phase, that now aliases the production start command. If the platform exposes install configuration, use npm ci --omit=dev. Do not configure --ignore-scripts without separately validating native package requirements.
+
+These changes are code/configuration fixes, not a claim the remote Preview was deployed or its 500 was observed resolved. Keep main unchanged, Supabase untouched and booking switches disabled.

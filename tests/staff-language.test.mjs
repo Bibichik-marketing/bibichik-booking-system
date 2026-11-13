@@ -17,3 +17,21 @@ test('settings and reservation operations render translated copy with original A
 test('every nested staff operation surface receives the active translation function',()=>{const source=readFileSync(new URL('../components/reservation/Staff.tsx',import.meta.url),'utf8');const ast=ts.createSourceFile('Staff.tsx',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);let count=0;function visit(n){if((ts.isJsxSelfClosingElement(n)||ts.isJsxOpeningElement(n))&&['StaffV2Tools','WhatsAppConfirmation','DeleteReservation'].includes(n.tagName.getText(ast))){count++;assert.ok(n.attributes.properties.some(a=>ts.isJsxAttribute(a)&&a.name.text==='t'))}ts.forEachChild(n,visit)}visit(ast);assert.equal(count,5)});
 const stub=code=>'data:text/javascript;base64,'+Buffer.from(code).toString('base64');
 test('localized dashboard renders navigation and statistic headings, preserving canonical filters',async()=>{for(const language of ['zh','ms']){const imports={react:import.meta.resolve('react'),'react/jsx-runtime':import.meta.resolve('react/jsx-runtime'),'lucide-react':import.meta.resolve('lucide-react'),'./Reservation':stub('export default function Reservation(){return null}'),'@/lib/confirmation-handoff':stub('export function finishConfirmationHandoff(){return null}'),'@/components/reservation/useStaffLanguage':stub('export function useStaffLanguage(){return {language:'+JSON.stringify(language)+',setLanguage(){}}}'),'@/lib/staff-copy':copyUrl,'./useBookingSound':stub('export function useBookingSound(){return {observe(){},reset(){},setAuthenticated(){}}}'),'./DeleteReservation':stub(compile('../components/reservation/DeleteReservation.tsx').replace(/from ['"]react\/jsx-runtime['"]/g,'from '+JSON.stringify(import.meta.resolve('react/jsx-runtime')))),'./StaffV2Tools':stub(toolsJs),'./WhatsAppConfirmation':stub('export default function WhatsApp(){return null}'),'@/lib/reservations':stub("export function malaysiaToday(){return '2030-01-01'}")};const js=compile('../components/reservation/Staff.tsx').replace(/from (['"])(.*?)\1/g,(_match,_quote,name)=>'from '+JSON.stringify(imports[name]??name));const {default:Staff}=await import(stub(js));const html=renderToStaticMarkup(createElement(Staff,{demo:true}));for(const label of ['Overview',"Today's reservations",'Pending approvals','Availability timeline','Outlet settings',"Today's bookings",'Expected guests','Awaiting approval'])assert.ok(html.includes(translateStaff(language,label)),label);assert.ok(html.includes('value="Pending"'));assert.ok(!html.includes('Test / resume sound'))}});
+
+
+test('Availability Timeline keeps its unique read-only controls and omits all duplicated outlet management in all three languages',()=>{
+ const management=['Read settings','Pause new bookings','Remove pause','Admin: validate schedule version','Validate quota adjustment','Create special closure','Reopen period (does not revive expiry)'];
+ const settingsFields=['reviewStart','firstArrival','lastLunch','dinnerStart','lastDinner','days','quota','quotaStart','quotaEnd','start','end','closure'];
+ for(const language of ['en','zh','ms']){
+  const t=key=>translateStaff(language,key);
+  const timeline=renderToStaticMarkup(createElement(Tools,{t,timeline:true}));
+  const settings=renderToStaticMarkup(createElement(Tools,{t}));
+  for(const label of management){assert.ok(!timeline.includes(t(label)),language+': timeline contains '+label);assert.ok(settings.includes(t(label)),language+': settings lost '+label);}
+  for(const field of settingsFields){assert.ok(!timeline.includes('name="'+field+'"'));assert.ok(settings.includes('name="'+field+'"'));}
+  assert.ok(timeline.includes(t('Planned reservation occupancy')));assert.ok(timeline.includes(t('Read reservation timeline')));assert.ok(timeline.includes(t('Reservation quota only. This is not physical seating availability.')));
+  assert.ok(timeline.includes('name="day"'));assert.ok(timeline.includes('bibichik-ss2'));assert.ok(timeline.includes('bibichik-sunway-163'));
+  assert.equal((timeline.match(/<form/g)||[]).length,1);assert.equal((settings.match(/<form/g)||[]).length,4);
+  assert.ok(!timeline.includes(t('Settings changes require Admin. All booking operations enforce outlet permissions in the database.')));
+  assert.ok(!settings.includes(t('Read reservation timeline')));
+ }
+});

@@ -1,5 +1,8 @@
 export type StaffLanguage="en"|"zh"|"ms";
 export const staffCopy:Record<string,{zh:string;ms:string}>={
+ "Delete": {zh:"删除",ms:"Padam"},
+ "Delete reservation": {zh:"删除预约",ms:"Padam tempahan"},
+ "This archives the reservation and preserves its audit history. Capacity commitments remain unchanged.": {zh:"此操作将归档预约并保留审核记录，原有容量承诺不变。",ms:"Tempahan diarkibkan dan sejarah audit dikekalkan. Komitmen kapasiti kekal tidak berubah."},
  "A Taste of": {
   "zh": "品味",
   "ms": "Cita Rasa"

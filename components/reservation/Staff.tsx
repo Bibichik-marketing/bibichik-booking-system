@@ -10,7 +10,7 @@ import StaffV2Tools from './StaffV2Tools';
 import DeleteReservation from './DeleteReservation';
 import WhatsAppConfirmation from './WhatsAppConfirmation';
 import {malaysiaToday} from '@/lib/reservations';
-type Booking={created_at?:string;source?:string;id:string;reference:string;outlet_id:string;reservation_date:string;reservation_time:string;customer_name:string;phone:string;email:string;guests:number;special_requests:string;status:string;row_version?:number;pending_expires_at?:string;needs_attention?:boolean};
+type Booking={created_at?:string;source?:string;id:string;reference:string;outlet_id:string;reservation_date:string;reservation_time:string;customer_name:string;phone:string;email:string;guests:number;special_requests:string;status:string;row_version?:number;archive_eligible?:boolean;pending_expires_at?:string;needs_attention?:boolean};
 const today=malaysiaToday();
 const samples:Booking[]=['Amelia Tan','Daniel Lim','Sofia Lee','Adam Wong','Mei Chen','Jamie Ong'].map((name,i)=>({id:`demo-${i}`,reference:`DEMO-00${i+1}`,outlet_id:i%2?'bibichik-ss2':'bibichik-sunway-163',reservation_date:today,reservation_time:['12:00','12:30','13:00','18:00','19:00','19:30'][i],customer_name:name,phone:'Demo contact',email:'guest@example.invalid',guests:[4,2,6,3,2,5][i],special_requests:i===0?'Fictional sample: birthday celebration, window seat if available.':'Fictional sample reservation.',status:['Pending','Confirmed','Seated','Pending','Confirmed','Completed'][i]}));
 export default function Staff({demo=false}:{demo?:boolean}){

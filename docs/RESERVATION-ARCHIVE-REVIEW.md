@@ -2,9 +2,11 @@
 
 ## Deployment state
 
-Migration `supabase/migrations/202611130001_reservation_archive.sql` is a **separate pending migration**. It must not be applied automatically. No remote database is modified by the implementation or tests. Existing customer booking schedules, booking-enabled switches, Auth users, staff memberships, slots and capacity functions are unchanged.
+Migration `supabase/migrations/202611130001_reservation_archive.sql` is **applied once in Staging, pending final Production approval**. It must not be applied automatically or rerun in Staging. Production has not received this migration. Existing customer booking schedules, booking-enabled switches, Auth users, staff memberships, slots and capacity functions remain unchanged.
 
-Approve and rehearse the migration against an isolated restored database and then Staging before a separately authorized Production application. Take and verify a fresh backup before remote changes. Current unit database tests use isolated PGlite with a minimal Supabase Auth fixture and the full V1/V2 SQL, including btree_gist and the exclusion constraint; they do not certify full Supabase Auth/platform recovery.
+The strict SQL was verified in Staging with both real linked outlet-staff identities under controlled authenticated-role claims. All synthetic fixture changes were rolled back, preserving original records and disabled Staging switches. A fresh protected Production backup also passed archive integrity checks, isolated PostgreSQL 17 application/Auth recovery and the same archive/capacity/audit regression. Unit tests additionally use isolated PGlite with the full V1/V2 SQL, including btree_gist and the exclusion constraint. These checks do not certify full Supabase-platform recovery or replace real signed-JWT/browser API acceptance tests. Revalidate backup freshness and Production guards immediately before any separately approved Production application.
+
+Staging-tested SQL SHA-256: `84bfb9b76a2d896a4c9a70d60ec0a90c4d3cd1df5906ef81cd7935e34abeb3c4`.
 
 The application fails closed when the new capability RPC is unavailable: normal reservations still load and Delete stays hidden. The feature is not operational on an unmigrated database. Review existing deployment automation before publishing this branch.
 
@@ -20,7 +22,7 @@ The application fails closed when the new capability RPC is unavailable: normal 
 
 Delete is in the existing reservation details panel, uses existing button styles, and is translated in English, Chinese and Malay. Confirmation identifies the booking reference. API payload requires UUID, positive row version and reference; server checks the Admin capability using the caller's JWT before invoking the mutation. Database independently repeats Admin authorization.
 
-Allowed: Completed, Cancelled, Rejected (and legacy Declined), Expired, No-show. A V2 Pending record whose fixed expiry has already passed is treated as Expired, consistently with existing list behaviour, without rewriting status. Active Pending, Confirmed and unreconciled Seated records are rejected. Cancel active reservations first.
+Allowed stored statuses: Completed, Cancelled, Rejected, Expired and No-show only. Every stored Pending or Confirmed record is rejected, including Pending whose deadline has passed; legacy Declined and Seated are also rejected. The list returns archive_eligible separately from its display-only Expired status so the updated UI hides Delete on such Pending records. This strict candidate differs from commit 851f72dfde7539ca517c82b8d5ce890ec3b62892 and requires review before Production. Cancel active reservations first.
 
 Archive acquires the shared outlet lock and reservation row lock in the existing order. Version/reference checks reject stale requests; duplicates are rejected without extra audit events. It stores the archive and audit event, with the same Admin ID and timestamp, atomically with token revocation. An audit failure rolls back the entire operation.
 

@@ -6,7 +6,7 @@ create table booking_private.reservation_archives(
  reservation_id uuid primary key references public.reservations(id) on delete restrict,
  archived_by uuid not null references auth.users(id) on delete restrict,
  archived_at timestamptz not null,
- status_at_archive text not null check(status_at_archive in ('Completed','Cancelled','Rejected','Declined','Expired','No-show'))
+ status_at_archive text not null check(status_at_archive in ('Completed','Cancelled','Rejected','Expired','No-show'))
 );
 alter table booking_private.reservation_archives owner to postgres;
 alter table booking_private.reservation_archives enable row level security;
@@ -35,8 +35,8 @@ begin
  decision:=pg_catalog.clock_timestamp();
  if r.row_version<>expected_version or r.reference is distinct from expected_reference then raise exception 'Booking changed; refresh';end if;
  if exists(select 1 from booking_private.reservation_archives where reservation_id=booking_id) then raise exception 'Already archived';end if;
- effective_status:=case when r.v2 and r.status='Pending' and r.pending_expires_at<=decision then 'Expired' else r.status end;
- if effective_status not in ('Completed','Cancelled','Rejected','Declined','Expired','No-show') then raise exception 'Cancel active reservations before deleting';end if;
+ effective_status:=r.status; -- Stored Pending/Confirmed are never archivable, even after a Pending deadline.
+ if effective_status not in ('Completed','Cancelled','Rejected','Expired','No-show') then raise exception 'Cancel active reservations before deleting';end if;
  insert into booking_private.reservation_archives(reservation_id,archived_by,archived_at,status_at_archive) values(r.id,actor,decision,effective_status);
  -- No change to status, released_at, scheduled times, guests or row_version: capacity is identical.
  update booking_private.status_tokens set revoked_at=coalesce(revoked_at,decision) where reservation_id=r.id;
@@ -48,7 +48,7 @@ create or replace function public.staff_reservations() returns jsonb language pl
 declare m public.staff_members%rowtype;result jsonb;
 begin
  select * into m from public.staff_members where user_id=auth.uid() and active;if not found then raise exception 'Forbidden';end if;
- select coalesce(jsonb_agg(jsonb_build_object('id',r.id,'reference',r.reference,'created_at',r.created_at,'source',r.source,'outlet_id',r.outlet_id,'customer_name',r.customer_name,'phone',r.phone,'email',r.email,'reservation_date',r.reservation_date,'reservation_time',r.reservation_time,'guests',r.guests,'special_requests',r.special_requests,'status',case when r.v2 and r.status='Pending' and r.pending_expires_at<=clock_timestamp() then 'Expired' else r.status end,'pending_expires_at',r.pending_expires_at,'needs_attention',r.needs_attention,'row_version',r.row_version) order by r.reservation_date desc,r.reservation_time),'[]') into result from public.reservations r where (m.role='admin' or r.outlet_id=m.outlet_id) and not exists(select 1 from booking_private.reservation_archives a where a.reservation_id=r.id);
+ select coalesce(jsonb_agg(jsonb_build_object('id',r.id,'reference',r.reference,'created_at',r.created_at,'source',r.source,'outlet_id',r.outlet_id,'customer_name',r.customer_name,'phone',r.phone,'email',r.email,'reservation_date',r.reservation_date,'reservation_time',r.reservation_time,'guests',r.guests,'special_requests',r.special_requests,'status',case when r.v2 and r.status='Pending' and r.pending_expires_at<=clock_timestamp() then 'Expired' else r.status end,'pending_expires_at',r.pending_expires_at,'needs_attention',r.needs_attention,'row_version',r.row_version,'archive_eligible',r.status in ('Completed','Cancelled','Rejected','Expired','No-show')) order by r.reservation_date desc,r.reservation_time),'[]') into result from public.reservations r where (m.role='admin' or r.outlet_id=m.outlet_id) and not exists(select 1 from booking_private.reservation_archives a where a.reservation_id=r.id);
  return result;
 end $$;
 

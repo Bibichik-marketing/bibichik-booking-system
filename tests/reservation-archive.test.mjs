@@ -46,7 +46,7 @@ test('only active Admin can archive: both staff denied at own/opposite outlets, 
  assert.equal((await db.query('select count(*)::int n from booking_private.reservation_archives')).rows[0].n,2);
 }finally{await db.close()}});
 test('terminal archive hides lists and customer links, preserves exact booking/capacity and records a single Admin audit',async()=>{const db=await setup();try{
- for(const status of ['Completed','Cancelled','Rejected','Declined','Expired','No-show']){
+ for(const status of ['Completed','Cancelled','Rejected','Expired','No-show']){
   const b=await seed(db,status);const before=await row(db,b.id);
   const capacity=async()=>(await db.query(`select booking_private.capacity('bibichik-ss2',clock_timestamp(),10,clock_timestamp()) ok`)).rows[0].ok;
   const was=await capacity();const hash=b.id.replaceAll('-','').repeat(2);
@@ -60,15 +60,15 @@ test('terminal archive hides lists and customer links, preserves exact booking/c
   await assert.rejects(archive(db,b),/Already archived/);
  }
  assert.deepEqual((await db.query('select public.staff_reservations() r')).rows[0].r,[]);
- assert.equal((await db.query('select count(*)::int n from public.reservations')).rows[0].n,6);
+ assert.equal((await db.query('select count(*)::int n from public.reservations')).rows[0].n,5);
  assert.equal((await db.query(`select booking_private.capacity('bibichik-ss2',clock_timestamp(),10,clock_timestamp()) ok`)).rows[0].ok,false,'archived retained commitments still prevent overbooking');
 }finally{await db.close()}});
-test('active states and stale/version/reference requests fail; expired Pending is archivable without changing its capacity fields',async()=>{const db=await setup();try{
- for(const status of ['Pending','Confirmed','Seated']){const b=await seed(db,status);await assert.rejects(archive(db,b),/Cancel active/);}
+test('active states and stale/version/reference requests fail; stored Pending remains forbidden after expiry and cannot be hidden by a display-only Expired status',async()=>{const db=await setup();try{
+ for(const status of ['Pending','Confirmed','Seated','Declined']){const b=await seed(db,status);await assert.rejects(archive(db,b),/Cancel active/);}
  const b=await seed(db,'Cancelled');await assert.rejects(archive(db,{...b,version:null}),/Invalid archive request/);await assert.rejects(archive(db,{...b,version:2}),/Booking changed/);await assert.rejects(archive(db,{...b,reference:'WRONG'}),/Booking changed/);
- const expired=await seed(db,'Pending',outlets[1],true);const before=await row(db,expired.id);await archive(db,expired);assert.deepEqual(await row(db,expired.id),before);
- assert.equal((await db.query('select status_at_archive s from booking_private.reservation_archives where reservation_id=$1',[expired.id])).rows[0].s,'Expired');
- for(const user of [ss2,sunway]){await identity(db,user);const list=(await db.query('select public.staff_reservations() r')).rows[0].r;assert.ok(list.every(r=>r.outlet_id===(user===ss2?outlets[0]:outlets[1])));assert.ok(!list.some(r=>r.id===expired.id));}
+ const expired=await seed(db,'Pending',outlets[1],true);const before=await row(db,expired.id);await assert.rejects(archive(db,expired),/Cancel active/);assert.deepEqual(await row(db,expired.id),before);
+ const displayed=(await db.query('select public.staff_reservations() r')).rows[0].r.find(r=>r.id===expired.id);assert.equal(displayed.status,'Expired');assert.equal(displayed.archive_eligible,false);
+ for(const user of [ss2,sunway]){await identity(db,user);const list=(await db.query('select public.staff_reservations() r')).rows[0].r;assert.ok(list.every(r=>r.outlet_id===(user===ss2?outlets[0]:outlets[1])));if(user===sunway)assert.ok(list.some(r=>r.id===expired.id));}
 }finally{await db.close()}});
 test('audit failure rolls back archive and token revocation atomically',async()=>{const db=await setup();try{
  const b=await seed(db,'Completed');await db.query(`insert into booking_private.status_tokens values($1,$2,clock_timestamp()+interval '1 day',null)`,[b.id,'a'.repeat(64)]);

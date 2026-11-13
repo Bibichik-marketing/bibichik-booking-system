@@ -11,3 +11,76 @@ body{background:#f8f7f3}.reserve{max-width:1040px;padding-top:26px}.reserve>head
 .whatsapp-confirmation{margin:24px 0}.whatsapp-button{display:flex;align-items:center;justify-content:center;gap:9px;min-height:48px;width:100%;padding:13px 14px;background:#187343;color:#fff;border:1px solid #187343;border-radius:6px;text-decoration:none;font-size:12px;font-weight:600;transition:background .15s}.whatsapp-button:hover{background:#125b35}.whatsapp-button:disabled{background:#edf1ee;color:#63756b;border-color:#d7e1da;cursor:not-allowed}.whatsapp-confirmation p{font-size:11px;line-height:1.65;color:#718890;margin-top:10px}
 
 .staff-language{display:flex;align-items:center;gap:8px;margin-left:auto;margin-right:14px;font-size:11px}.staff-language select{width:auto;max-width:155px;min-height:36px;margin:0;padding:7px 10px}.staff-shell[lang=zh]{font-family:Arial,"PingFang SC","Microsoft YaHei",sans-serif}@media(max-width:760px){.staff-language>span{display:none}.staff-language{margin-right:8px}.staff-language select{max-width:132px;font-size:11px}.staff-topbar>span:first-child{max-width:38%;line-height:1.4}}
+
+/* Responsive sizing only: retain the existing desktop design and components. */
+@media (max-width:1024px){
+ .staff-main,.staff-list,.manual-panel,.staff-page-heading>div,.section-heading>div{min-width:0}
+ .staff-language select{min-height:44px}
+ .staff-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .staff-stats article{min-width:0}
+ .staff-stats p,.staff-page-heading h1,.section-heading h2{overflow-wrap:anywhere}
+ .staff-filters{flex-wrap:wrap}
+ .staff-filters label{flex:1 1 150px;min-width:0}
+ .staff-shell input,.staff-shell select,.reserve input,.reserve select,.reserve textarea{min-width:0;max-width:100%}
+ .reserve fieldset,.reserve-grid>*,.reserve-outlets>*{min-width:0}
+ .reserve-grid,.reserve-outlets{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .reservation-table,.calendar-strip,.staff-sidebar nav{max-width:100%;min-width:0;overscroll-behavior-x:contain}
+ .reservation-table{position:relative}
+ .reservation-table th,.reservation-table td{padding-inline:12px}
+ .guest-link,.detail-button{min-height:44px}
+ .detail-button{min-width:44px}
+ .staff-toolbar button,.whatsapp-button,.reserve-primary{max-width:100%;white-space:normal;overflow-wrap:anywhere}
+ .detail-panel{min-width:0;max-height:100dvh;overscroll-behavior-y:contain}
+ .detail-panel dl>div{min-width:0}
+ .detail-panel dd{min-width:0;overflow-wrap:anywhere}
+ .reserve dl>div{min-width:0}
+ .reserve dd{min-width:0;text-align:right;overflow-wrap:anywhere}
+}
+@media (max-width:760px){
+ .staff-topbar{height:auto;min-height:60px;padding-block:10px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,156px) 32px;gap:8px}
+ .staff-topbar>span:first-child{max-width:none;min-width:0;overflow-wrap:anywhere}
+ .staff-language{min-width:0;max-width:100%;margin:0}
+ .staff-language select{width:100%;max-width:100%;min-height:44px;font-size:16px;padding:8px}
+ .staff-avatar{flex-shrink:0}
+ .staff-page-heading{gap:12px}
+ .staff-page-heading .dark-button{min-width:44px;flex-shrink:0}
+ .sidebar-bottom{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+ .sidebar-bottom>p{display:none}
+ .staff-sidebar nav{width:100%;padding-bottom:4px}
+ .staff-sidebar nav button{flex-shrink:0}
+ .staff-shell input,.staff-shell select,.reserve input:not([type=radio]):not([type=checkbox]),.reserve select,.reserve textarea{font-size:16px}
+ .staff-shell input[type=date],.staff-shell input[type=time],.staff-shell input[type=datetime-local],.reserve input[type=date]{width:100%;min-inline-size:0}
+ .staff-shell input::-webkit-date-and-time-value,.reserve input::-webkit-date-and-time-value{min-width:0;text-align:left}
+ .section-heading>button{min-width:44px;min-height:44px;flex-shrink:0}
+ .detail-overlay{height:100dvh}
+ .detail-panel{padding:16px;max-width:100%;height:100%}
+ .detail-panel h2{overflow-wrap:anywhere}
+ .detail-panel dt{min-width:0;flex:0 0 30%}
+ .staff-toolbar{align-items:stretch}
+ .staff-toolbar button{flex:1 1 180px;min-width:0}
+ .staff-list form>label{display:block;min-width:0;overflow-wrap:anywhere}
+ .staff-list button{max-width:100%;white-space:normal}
+ .whatsapp-button{min-height:48px}
+ .reserve{padding-inline:16px}
+ .reserve>.demo-banner{margin-inline:-16px}
+ .reserve-panel{padding:24px 18px}
+ .reserve-outlets label{gap:6px;padding:16px 8px}
+ .reserve-outlets input,.reserve-outlets svg,.reserve-consent input{flex-shrink:0}
+ .reserve-progress{gap:12px}
+ .reserve-progress li{min-width:0;flex:1}
+ .reserve-progress span{flex-shrink:0}
+ .reserve>header nav{flex-wrap:wrap;column-gap:10px;row-gap:4px}
+ .reserve>header nav a{min-width:40px;min-height:44px}
+ .reserve-back{min-height:44px}
+ .reserve-consent{padding-block:8px;min-height:44px}
+ .reserve dl dt{flex:0 1 40%;min-width:0;overflow-wrap:anywhere}
+ .reserve dl dd{flex:1 1 60%}
+}
+@media (max-width:430px){
+ .reserve-grid{grid-template-columns:minmax(0,1fr);gap:16px}
+ .staff-filters label{flex-basis:100%}
+ .manual-panel>.reserve{padding:18px 12px}
+ .manual-panel .reserve-panel{padding:20px 14px}
+ .section-heading h2{font-size:21px}
+ .empty-state{padding:36px 18px}
+}

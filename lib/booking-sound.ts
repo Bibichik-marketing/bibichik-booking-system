@@ -1,7 +1,7 @@
 export type SoundResult='playing'|'blocked'|'muted';
 /** Browser audio activation must originate in a click, never a polling timer. */
 export function createBookingSound(factory:()=>AudioContext){
- let context:AudioContext|null=null;let enabled=false;
+ let context:AudioContext|null=null;let enabled=false;let primed:AudioContext|null=null;
  function chime(ctx:AudioContext){
   // Schedule before awaiting resume: preserve the click gesture on Safari too.
   for(const [offset,frequency] of [[0,740],[0.24,988]]){
@@ -12,6 +12,14 @@ export function createBookingSound(factory:()=>AudioContext){
   }
  }
  return {
+  async unlock():Promise<SoundResult>{
+   try{
+    if(!context||context.state==='closed')context=factory();const ctx=context;
+    // Silent source is started synchronously within the gesture. No activation beep.
+    if(primed!==ctx){const oscillator=ctx.createOscillator(),gain=ctx.createGain();oscillator.connect(gain);gain.connect(ctx.destination);gain.gain.setValueAtTime(0,ctx.currentTime);oscillator.onended=()=>{oscillator.disconnect();gain.disconnect()};oscillator.start();oscillator.stop(ctx.currentTime+0.01);primed=ctx}
+    await ctx.resume();if(context!==ctx||ctx.state!=='running')return 'blocked';enabled=true;return 'playing';
+   }catch{return 'blocked'}
+  },
   async activate():Promise<SoundResult>{
    enabled=false;
    async function discard(){const old=context;context=null;try{await old?.close()}catch{}}

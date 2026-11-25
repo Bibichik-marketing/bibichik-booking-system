@@ -1,5 +1,16 @@
 export type StaffLanguage="en"|"zh"|"ms";
 export const staffCopy:Record<string,{zh:string;ms:string}>={
+ "Send WhatsApp Rejection":{zh:"发送 WhatsApp 婉拒通知",ms:"Hantar penolakan WhatsApp"},
+ "Confirm Reservation":{zh:"确认预约",ms:"Sahkan Tempahan"},
+ "Reject reservation":{zh:"拒绝预约",ms:"Tolak tempahan"},
+ "Confirm this rejected reservation? Availability and capacity will be checked again.":{zh:"确认这笔已拒绝的预约？系统将重新检查营业安排和容量。",ms:"Sahkan tempahan yang ditolak ini? Ketersediaan dan kapasiti akan diperiksa semula."},
+ "Reservation updated. Review and send the message in WhatsApp.":{zh:"预约已更新。请在 WhatsApp 中检查并手动发送消息。",ms:"Tempahan dikemas kini. Semak dan hantar mesej dalam WhatsApp."},
+ "Reservation updated. No supported registered WhatsApp number is available.":{zh:"预约已更新，但没有可用的已登记 WhatsApp 号码。",ms:"Tempahan dikemas kini. Tiada nombor WhatsApp berdaftar yang disokong."},
+ "Open WhatsApp":{zh:"打开 WhatsApp",ms:"Buka WhatsApp"},
+ "Not enough capacity is available. The reservation remains Rejected.":{zh:"剩余容量不足，预约仍为已拒绝。",ms:"Kapasiti tidak mencukupi. Tempahan kekal Ditolak."},
+ "This reservation can no longer be confirmed. Check its date, time, opening hours and booking availability.":{zh:"此预约目前无法确认，请检查日期、时间、营业安排及预约开放状态。",ms:"Tempahan ini tidak boleh disahkan. Semak tarikh, masa, waktu operasi dan ketersediaan tempahan."},
+ "This reservation changed. Refresh and try again.":{zh:"此预约已变更，请刷新后重试。",ms:"Tempahan ini telah berubah. Muat semula dan cuba lagi."},
+ "Reconfirmation is not available yet. The reviewed database update must be installed first.":{zh:"重新确认功能尚未开放，须先安装已审核的数据库更新。",ms:"Pengesahan semula belum tersedia. Kemas kini pangkalan data yang disemak mesti dipasang dahulu."},
  "Checking session…": {zh:"正在检查登录状态…",ms:"Menyemak sesi…"},
  "Stay signed in": {zh:"保持登录",ms:"Kekal log masuk"},
  "Manage reservation": {zh:"管理预约",ms:"Urus tempahan"},

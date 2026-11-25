@@ -20,3 +20,16 @@ export function whatsappConfirmationLink(booking:ConfirmationBooking):string|nul
  const phone=normalizeMalaysianMobile(booking.phone),message=confirmationMessage(booking);
  return phone&&message?`https://wa.me/${phone}?text=${encodeURIComponent(message)}`:null;
 }
+
+/** Prepared only for a successfully saved Rejected booking; staff sends manually. */
+export function rejectionMessage(booking:ConfirmationBooking):string|null {
+ if(!confirmationMessage(booking))return null;
+ const outlet=booking.outlet_id==='bibichik-ss2'?'SS2':'Sunway 163';
+ const date=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Kuala_Lumpur',day:'numeric',month:'long',year:'numeric'}).format(new Date(`${booking.reservation_date}T${booking.reservation_time.slice(0,5)}:00+08:00`));
+ return `Hi ${booking.customer_name},\n\nThank you for your interest in BiBiChik. We are sorry that we are unable to accept this reservation request.\n\nOutlet: BiBiChik ${outlet}\nBooking reference: ${booking.reference}\nDate: ${date}\nTime: ${booking.reservation_time.slice(0,5)} (Malaysia time)\n\nPlease contact us if you would like help finding another suitable date or time. We appreciate your understanding.\n\n— BiBiChik Team`;
+}
+export function whatsappRejectionLink(booking:ConfirmationBooking):string|null {
+ if(booking.status!=='Rejected')return null;
+ const phone=normalizeMalaysianMobile(booking.phone),message=rejectionMessage(booking);
+ return phone&&message?`https://wa.me/${phone}?text=${encodeURIComponent(message)}`:null;
+}

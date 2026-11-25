@@ -1,5 +1,9 @@
 export type StaffLanguage="en"|"zh"|"ms";
 export const staffCopy:Record<string,{zh:string;ms:string}>={
+ "Checking session…": {zh:"正在检查登录状态…",ms:"Menyemak sesi…"},
+ "Stay signed in": {zh:"保持登录",ms:"Kekal log masuk"},
+ "Manage reservation": {zh:"管理预约",ms:"Urus tempahan"},
+ "Private booking link": {zh:"私人预约链接",ms:"Pautan tempahan peribadi"},
  "Delete": {zh:"删除",ms:"Padam"},
  "Delete reservation": {zh:"删除预约",ms:"Padam tempahan"},
  "This archives the reservation and preserves its audit history. Capacity commitments remain unchanged.": {zh:"此操作将归档预约并保留审核记录，原有容量承诺不变。",ms:"Tempahan diarkibkan dan sejarah audit dikekalkan. Komitmen kapasiti kekal tidak berubah."},

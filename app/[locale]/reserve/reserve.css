@@ -136,3 +136,27 @@ body{background:#f8f7f3}.reserve{max-width:1040px;padding-top:26px}.reserve>head
  .customer-language-full{display:none}
  .customer-language-short{display:inline}
 }
+
+/* Practical navigation and compact operations; retain the existing brand styling. */
+.staff-sidebar nav{min-width:0}
+.staff-sidebar nav button{min-width:0;overflow-wrap:anywhere}
+.staff-stay-signed{display:flex!important;align-items:center;gap:10px;min-height:44px}
+.staff-stay-signed input{flex-shrink:0}
+.staff-booking-tools,.staff-link-tools{min-width:0;margin-block:16px}
+.staff-booking-tools>summary,.staff-link-tools>summary{cursor:pointer;min-height:44px;padding:12px 0;color:inherit;font-size:13px}
+.staff-booking-tools>.staff-list{margin-top:8px!important}
+@media(max-width:1024px){
+ .staff-sidebar nav button{font-size:11px;line-height:1.5}
+ .calendar-strip{display:flex;overflow-x:auto}
+ .calendar-strip button{flex-shrink:0;min-width:54px;min-height:68px}
+ .staff-filters,.staff-toolbar,.staff-booking-tools,.staff-link-tools{min-width:0}
+}
+@media(max-width:760px){
+ .staff-sidebar nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));overflow:visible;gap:5px}
+ .staff-sidebar nav button{justify-content:center;flex-wrap:wrap;gap:5px;min-height:48px;padding:8px 5px;white-space:normal;text-align:center;font-size:11px}
+ .staff-sidebar nav button svg{flex-shrink:0}
+ .staff-sidebar nav button[aria-current=page]{border-radius:6px}
+ .staff-stay-signed input{width:auto!important;min-height:0!important;margin:0!important}
+}
+
+.reserve-outlets:has(>label:only-child){grid-template-columns:minmax(0,1fr)}

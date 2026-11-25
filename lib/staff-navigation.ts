@@ -1,0 +1,1 @@
+export function staffNavigation(isAdmin:boolean){return isAdmin?['Overview',"Today's reservations",'Pending approvals','Availability timeline','Outlet settings']:['Overview',"Today's reservations",'Pending approvals'];}

@@ -5,3 +5,21 @@ const ko=['테이블 예약','맛있는 음식과 좋은 사람들, 소중한 �
 const ja=['テーブルを予約','おいしい料理と大切な人と、素敵な思い出を。','予約内容','お客様情報','申込結果','店舗を選択','予約日','人数','希望時間','ランチ','ディナー','次へ','戻る','氏名','携帯電話番号','メール（任意）','ご要望（任意）','誕生日、ベビーチェア、食物アレルギーなど…','予約を申し込む','お申し込みを受け付けました！','BiBiChikをご利用いただきありがとうございます。予約申込を受け付け、スタッフの確認をお待ちいただいております。','予約番号','確認待ち','選択した条件ではオンライン予約をご利用いただけません。店舗へお問い合わせください。','11名以上は店舗へお問い合わせください。','予約管理のための個人情報の利用に同意します。','必須項目と有効なマレーシアの携帯電話番号をご確認ください。','送信できませんでした。再度お試しください。','読み込み中…','送信中…'];
 const ms=['Tempah Meja Anda','Makanan enak, teman baik, kenangan indah.','Butiran tempahan','Maklumat tetamu','Hasil permohonan','Pilih cawangan','Tarikh tempahan','Bilangan tetamu','Masa pilihan','Makan tengah hari','Makan malam','Teruskan','Kembali','Nama penuh','Nombor telefon','E-mel (pilihan)','Permintaan khas (pilihan)','Sambutan hari lahir, kerusi bayi, alahan makanan...','Hantar Permohonan','Permohonan Diterima!','Terima kasih kerana memilih BiBiChik. Permohonan anda telah diterima dan sedang menunggu pengesahan pasukan kami.','Rujukan tempahan','Menunggu Pengesahan','Tempahan dalam talian tidak tersedia untuk pilihan ini. Sila hubungi restoran.','Untuk kumpulan melebihi 10 orang, sila hubungi restoran.','Saya bersetuju BiBiChik menggunakan maklumat ini untuk mengurus tempahan saya.','Sila semak medan wajib dan nombor telefon bimbit Malaysia yang sah.','Permohonan gagal dihantar. Sila cuba lagi.','Memuatkan…','Menghantar…'];
 export const reservationCopy:Record<string,string[]>={en,zh,ko,ja,ms};
+
+// Public restaurant contact details; never customer phone numbers.
+export const restaurantContacts=[
+ {id:'bibichik-sunway-163',name:'BiBiChik Sunway 163',phone:'011-6214 7497',whatsapp:'601162147497'},
+ {id:'bibichik-ss2',name:'BiBiChik SS2',phone:'011-7023 3354',whatsapp:'601170233354'},
+] as const;
+export const customerContactCopy:Record<string,{notice:string;button:string;heading:string;enquiry:(outlet:string)=>string}>={
+ en:{notice:'For reservations of more than 10 guests, please contact the restaurant directly via WhatsApp.',button:'Contact via WhatsApp',heading:'Contact / WhatsApp',enquiry:outlet=>`Hello ${outlet}, I would like to enquire about a group reservation for more than 10 guests.`},
+ zh:{notice:'超过10位宾客的团体预订，请通过 WhatsApp 直接联系餐厅。',button:'通过 WhatsApp 联系',heading:'联系 / WhatsApp',enquiry:outlet=>`您好，${outlet}，我想咨询超过10位宾客的团体预订。`},
+ ms:{notice:'Untuk tempahan melebihi 10 tetamu, sila hubungi restoran secara terus melalui WhatsApp.',button:'Hubungi melalui WhatsApp',heading:'Hubungi / WhatsApp',enquiry:outlet=>`Helo ${outlet}, saya ingin bertanya tentang tempahan berkumpulan untuk lebih daripada 10 tetamu.`},
+ ko:{notice:'10명을 초과하는 단체 예약은 WhatsApp으로 레스토랑에 직접 문의해 주세요.',button:'WhatsApp으로 문의',heading:'문의 / WhatsApp',enquiry:outlet=>`안녕하세요 ${outlet}, 10명을 초과하는 단체 예약에 대해 문의하고 싶습니다.`},
+ ja:{notice:'11名様以上のご予約は、WhatsAppで店舗へ直接お問い合わせください。',button:'WhatsAppで問い合わせ',heading:'お問い合わせ / WhatsApp',enquiry:outlet=>`こんにちは、${outlet}。11名以上のグループ予約について問い合わせたいです。`},
+};
+export function groupReservationLink(outletId:string,locale:string):string|null {
+ const contact=restaurantContacts.find(outlet=>outlet.id===outletId);
+ const copy=customerContactCopy[locale];
+ return contact&&copy?`https://wa.me/${contact.whatsapp}?text=${encodeURIComponent(copy.enquiry(contact.name))}`:null;
+}

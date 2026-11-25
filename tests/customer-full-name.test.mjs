@@ -12,3 +12,22 @@ test('all five customer forms render one required Full Name input and no separat
 test('status page supports proposed Full Name response and preserves legacy display-name fallback',async()=>{for(const full of [false,true]){const booking={firstName:'Synthetic',reference:'SYNTHETIC',...(full?{fullName:'Synthetic Full Name'}:{})};const map={react:uri('export function useState(v){return [v===null?'+JSON.stringify(booking)+':v,()=>{}]}'),'react/jsx-runtime':import.meta.resolve('react/jsx-runtime'),'@/lib/status-copy':statusUrl,'@/lib/reservation-copy':copyUrl,'./CustomerLanguageSelector':uri('export default function Selector(){return null}'),'./useCustomerLocale':uri('export const useCustomerLocale=locale=>({locale,switchLocale(){}})')};const {default:Status}=await import(uri(compile('components/reservation/BookingStatus.tsx').replace(/from (['"])(.*?)\1/g,(_a,_q,name)=>'from '+JSON.stringify(map[name]??name))));const html=renderToStaticMarkup(createElement(Status,{locale:'en'}));assert.ok(html.includes(full?'Synthetic Full Name':'Synthetic'));if(full)assert.ok(html.includes('Full Name'));}});
 
 test('WhatsApp confirmation preserves the exact Full Name stored for staff',async()=>{const {confirmationMessage}=await import(uri(compile('lib/whatsapp.ts')));const name='Synthetic Full Name Test';const message=confirmationMessage({status:'Confirmed',customer_name:name,phone:'0123456789',outlet_id:'bibichik-ss2',reservation_date:'2099-01-02',reservation_time:'19:00',guests:2,reference:'SYNTHETIC'});assert.ok(message.includes('Hi '+name+'!'));});
+
+test('group enquiries use official outlet numbers and localized messages without changing the online guest limit',async()=>{
+ const {restaurantContacts,customerContactCopy,groupReservationLink}=await import(copyUrl);
+ assert.equal(groupReservationLink('unknown','en'),null);assert.equal(groupReservationLink('bibichik-ss2','unknown'),null);
+ for(const locale of ['en','zh','ms','ko','ja'])for(const contact of restaurantContacts){
+  const url=new URL(groupReservationLink(contact.id,locale));
+  assert.equal(url.origin,'https://wa.me');assert.equal(url.pathname,'/'+(contact.id==='bibichik-ss2'?'601170233354':'601162147497'));
+  assert.equal(url.searchParams.get('text'),customerContactCopy[locale].enquiry(contact.name));assert.ok(url.searchParams.get('text').includes(contact.name));
+  const react=uri('let n=0;export const useEffect=()=>{};export const useRef=()=>({current:null});export function useState(v){const i=n++;return [i===1?'+JSON.stringify(contact.id)+':v,()=>{}]}//'+locale+contact.id);
+  const map={react,'react/jsx-runtime':import.meta.resolve('react/jsx-runtime'),'lucide-react':import.meta.resolve('lucide-react'),'@/lib/status-copy':statusUrl,'@/lib/reservations':reservationsUrl,'@/lib/reservation-copy':copyUrl,'@/lib/customer-name':nameUrl,'./CustomerLanguageSelector':uri('export default function Selector(){return null}'),'./useCustomerLocale':uri('export const useCustomerLocale=locale=>({locale,switchLocale(){}})')};
+  const {default:Reservation}=await import(uri(compile('components/reservation/Reservation.tsx').replace(/from (['"])(.*?)\1/g,(_a,_q,name)=>'from '+JSON.stringify(map[name]??name))));
+  const html=renderToStaticMarkup(createElement(Reservation,{locale,demo:true}));
+  assert.ok(html.includes(customerContactCopy[locale].notice));assert.ok(html.includes(customerContactCopy[locale].heading));
+  const links=[...html.matchAll(/<a href="(https:\/\/wa.me\/[^\"]+)" target="_blank" rel="noopener noreferrer"/g)].map(match=>match[1].replaceAll('&amp;','&'));
+  assert.equal(links.length,3);assert.equal(links[0],url.href);assert.equal(links[1],groupReservationLink('bibichik-sunway-163',locale));assert.equal(links[2],groupReservationLink('bibichik-ss2',locale));
+  assert.ok(html.includes('011-6214 7497'));assert.ok(html.includes('011-7023 3354'));
+  assert.equal((html.match(/<option /g)||[]).length,10);assert.ok(!html.includes('<option value="11"'));
+ }
+});

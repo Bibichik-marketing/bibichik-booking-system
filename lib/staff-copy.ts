@@ -1,5 +1,17 @@
 export type StaffLanguage="en"|"zh"|"ms";
 export const staffCopy:Record<string,{zh:string;ms:string}>={
+ "Loading…":{zh:"加载中…",ms:"Memuatkan…"},
+ "Reason for Rejection":{zh:"拒绝原因",ms:"Sebab Penolakan"},
+ "This reason will be shared with the customer via WhatsApp. Do not include internal notes or staff details.":{zh:"此原因将通过 WhatsApp 告知顾客。请勿包含内部备注或员工资料。",ms:"Sebab ini akan dikongsi dengan pelanggan melalui WhatsApp. Jangan masukkan nota dalaman atau butiran kakitangan."},
+ "Enter a valid reason for rejection.":{zh:"请输入有效的拒绝原因。",ms:"Masukkan sebab penolakan yang sah."},
+ "This reservation cannot be rejected. Refresh and check its status.":{zh:"无法拒绝此预约，请刷新并检查状态。",ms:"Tempahan ini tidak boleh ditolak. Muat semula dan semak statusnya."},
+ "Rejection reasons are not available yet. The reviewed database update must be installed and enabled first.":{zh:"拒绝原因功能尚未开放，须先安装并启用已审核的数据库更新。",ms:"Sebab penolakan belum tersedia. Kemas kini pangkalan data yang disemak mesti dipasang dan didayakan dahulu."},
+ "Rejection history":{zh:"拒绝审核记录",ms:"Sejarah penolakan"},
+ "No rejection history.":{zh:"暂无拒绝记录。",ms:"Tiada sejarah penolakan."},
+ "No reason was recorded for this historical rejection.":{zh:"此历史拒绝记录未填写原因。",ms:"Tiada sebab direkodkan bagi penolakan terdahulu ini."},
+ "Staff member":{zh:"员工编号",ms:"Ahli kakitangan"},
+ "A saved rejection reason is required before opening WhatsApp.":{zh:"须先有已保存的拒绝原因，才能打开 WhatsApp。",ms:"Sebab penolakan yang disimpan diperlukan sebelum membuka WhatsApp."},
+ "Could not load rejection history. Please try again.":{zh:"无法加载拒绝记录，请重试。",ms:"Sejarah penolakan tidak dapat dimuatkan. Sila cuba lagi."},
  "Go Back":{zh:"返回",ms:"Kembali"},
  "Confirm Reject":{zh:"确认拒绝",ms:"Sahkan Penolakan"},
  "Confirm Cancellation":{zh:"确认取消",ms:"Sahkan Pembatalan"},

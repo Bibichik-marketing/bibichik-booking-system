@@ -1,0 +1,12 @@
+'use client';
+import {useEffect,useState} from 'react';
+import WhatsAppConfirmation from './WhatsAppConfirmation';
+import type {ConfirmationBooking} from '@/lib/whatsapp';
+type Entry={reason:string|null;actor:string|null;at:string;event:string};
+export default function RejectionHistory({booking,t,language='en',demo=false}:{booking:ConfirmationBooking&{id:string;row_version?:number};t:(key:string)=>string;language?:string;demo?:boolean}){
+ const [history,setHistory]=useState<{id:string;entries:Entry[]}|null>(null),[error,setError]=useState('');
+ useEffect(()=>{if(demo)return;const controller=new AbortController();fetch('/api/staff',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'rejectionHistory',id:booking.id}),signal:controller.signal,cache:'no-store'}).then(async response=>{if(!response.ok)throw Error();const data=await response.json();if(!Array.isArray(data.events)||data.events.some((event:Entry)=>typeof event.at!=='string'||(event.reason!==null&&typeof event.reason!=='string')||(event.actor!==null&&typeof event.actor!=='string')))throw Error();if(!controller.signal.aborted){setHistory({id:booking.id,entries:data.events});setError('');}}).catch(()=>{if(!controller.signal.aborted)setError('Could not load rejection history. Please try again.');});return()=>controller.abort();},[booking.id,booking.row_version,demo]);
+ const entries=history?.id===booking.id?history.entries:null;
+ if(demo||(!error&&entries?.length===0&&booking.status!=='Rejected'))return null;
+ return <section className="rejection-history" aria-label={t('Rejection history')}><h3>{t('Rejection history')}</h3>{error?<p role="alert">{t(error)}</p>:entries===null?<p role="status">{t('Loading…')}</p>:<>{!entries.length&&<p>{t('No rejection history.')}</p>}{entries.map((entry,index)=><article key={entry.at+index}><p><strong>{t('Reason for Rejection')}</strong></p><p className="rejection-reason-text">{entry.reason??t('No reason was recorded for this historical rejection.')}</p><small>{t('Rejected')} · {Number.isFinite(Date.parse(entry.at))?new Date(entry.at).toLocaleString(language==='zh'?'zh-CN':language==='ms'?'ms-MY':'en-MY',{timeZone:'Asia/Kuala_Lumpur'}):'—'}<br/>{t('Staff member')}: {entry.actor??'—'}</small></article>)}{booking.status==='Rejected'&&<WhatsAppConfirmation booking={{...booking,rejection_reason:entries[0]?.reason??null}} requireRejectionReason t={t}/>}</>}</section>;
+}

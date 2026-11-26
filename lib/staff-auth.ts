@@ -1,4 +1,4 @@
-export type StaffAuthCategory='missing_session'|'auth_configuration'|'api_key_rejected'|'session_rejected'|'membership_denied'|'auth_rejected'|'upstream_unavailable'|'invalid_auth_response'|'booking_capacity'|'booking_unavailable'|'booking_changed'|'reconfirmation_unavailable';
+export type StaffAuthCategory='missing_session'|'auth_configuration'|'api_key_rejected'|'session_rejected'|'membership_denied'|'auth_rejected'|'upstream_unavailable'|'invalid_auth_response'|'booking_capacity'|'booking_unavailable'|'booking_changed'|'reconfirmation_unavailable'|'rejection_reason_required'|'rejection_unavailable'|'rejection_reason_unavailable';
 const safeCodes=['invalid_credentials','email_not_confirmed','user_banned','over_request_rate_limit','bad_jwt','session_not_found','PGRST301','PGRST302','42501','P0001'];
 export class StaffAuthError extends Error{
  constructor(public category:StaffAuthCategory,public status:number,public upstreamStatus?:number,public upstreamCode?:string){super(category);this.name='StaffAuthError'}
@@ -22,6 +22,7 @@ export async function staffRequest(path:string,token:string,body:unknown,env:Rec
   // Never retain or log upstream response text, user identifiers or request headers.
   const safeCode=safeCodes.includes(code)?code:undefined;
   if(path==='/rest/v1/rpc/staff_reconfirm_rejected_v2'){const category=({'PBC01':'booking_capacity','PBC02':'booking_unavailable','PBC03':'booking_changed'} as const)[code as 'PBC01'|'PBC02'|'PBC03'];if(category)throw new StaffAuthError(category,409,response.status);if(code==='PGRST202'&&response.status===404)throw new StaffAuthError('reconfirmation_unavailable',503,response.status);}
+  if(['/rest/v1/rpc/staff_reject_reservation_v2','/rest/v1/rpc/staff_status_v2','/rest/v1/rpc/staff_set_status'].includes(path)&&code==='PBR01')throw new StaffAuthError('rejection_reason_required',400,response.status);if(path==='/rest/v1/rpc/staff_reject_reservation_v2'){if(code==='PBR02')throw new StaffAuthError('rejection_unavailable',409,response.status);if(code==='PBC03')throw new StaffAuthError('booking_changed',409,response.status);}if(['/rest/v1/rpc/staff_reject_reservation_v2','/rest/v1/rpc/staff_rejection_history_v2','/rest/v1/rpc/staff_rejection_reason_capability_v2'].includes(path)&&code==='PGRST202'&&response.status===404)throw new StaffAuthError('rejection_reason_unavailable',503,response.status);
   if(keyRejected)throw new StaffAuthError('api_key_rejected',503,response.status,safeCode);
   if(response.status===429||response.status>=500)throw new StaffAuthError('upstream_unavailable',503,response.status,safeCode);
   if(path.startsWith('/auth/'))throw new StaffAuthError('auth_rejected',401,response.status,safeCode);

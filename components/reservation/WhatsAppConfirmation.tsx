@@ -1,9 +1,9 @@
 import {MessageCircle} from 'lucide-react';
-import {normalizeMalaysianMobile,whatsappConfirmationLink,whatsappRejectionLink,type ConfirmationBooking} from '@/lib/whatsapp';
+import {normalizeMalaysianMobile,whatsappConfirmationLink,whatsappRejectionLink,validRejectionReason,type ConfirmationBooking} from '@/lib/whatsapp';
 const identity=(key:string)=>key;
-export default function WhatsAppConfirmation({booking,demo=false,t=identity}:{t?:(key:string)=>string;booking:ConfirmationBooking;demo?:boolean}){
+export default function WhatsAppConfirmation({booking,demo=false,t=identity,requireRejectionReason=false}:{t?:(key:string)=>string;booking:ConfirmationBooking;demo?:boolean;requireRejectionReason?:boolean}){
  if(!['Confirmed','Rejected'].includes(booking.status))return null;
- const rejected=booking.status==='Rejected'; const link=rejected?whatsappRejectionLink(booking):whatsappConfirmationLink(booking);
- const warning=demo?'WhatsApp is disabled for fictional demo bookings.':!normalizeMalaysianMobile(booking.phone)?'A valid Malaysian mobile number is required. Verify the guest’s contact details before using WhatsApp.':!link?'Check the reservation date, time and outlet before using WhatsApp.':null;
+ const rejected=booking.status==='Rejected'; const link=rejected?whatsappRejectionLink(booking,requireRejectionReason):whatsappConfirmationLink(booking);
+ const warning=rejected&&requireRejectionReason&&!validRejectionReason(booking.rejection_reason)?'A saved rejection reason is required before opening WhatsApp.':demo?'WhatsApp is disabled for fictional demo bookings.':!normalizeMalaysianMobile(booking.phone)?'A valid Malaysian mobile number is required. Verify the guest’s contact details before using WhatsApp.':!link?'Check the reservation date, time and outlet before using WhatsApp.':null;
  return <div className="whatsapp-confirmation">{warning?<><button className="whatsapp-button" disabled aria-describedby="whatsapp-help"><MessageCircle size={18}/>{(rejected?t("Send WhatsApp Rejection"):t("Send WhatsApp Confirmation"))}</button><p id="whatsapp-help" role="status">{t(warning)}</p></>:<><a className="whatsapp-button" href={link!} target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer"><MessageCircle size={18}/>{(rejected?t("Send WhatsApp Rejection"):t("Send WhatsApp Confirmation"))}</a><p>{t("Opens WhatsApp in a new tab. Review the message and press Send manually. Opening it does not confirm delivery.")}</p></>}</div>;
 }

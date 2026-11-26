@@ -1,5 +1,9 @@
 export type StaffLanguage="en"|"zh"|"ms";
 export const staffCopy:Record<string,{zh:string;ms:string}>={
+ "New reservation needs attention":{zh:"新预约待处理",ms:"Tempahan baharu memerlukan perhatian"},
+ "Review new Pending bookings. Sound repeats every 15 seconds until acknowledged or processed.":{zh:"请查看新的待审核预约。提示音每15秒重复，直至确认已阅或处理。",ms:"Semak tempahan Menunggu baharu. Bunyi berulang setiap 15 saat sehingga diakui atau diproses."},
+ "Acknowledge":{zh:"确认已阅",ms:"Akui penerimaan"},
+ "Enable Sound":{zh:"启用提示音",ms:"Aktifkan Bunyi"},
  "Loading…":{zh:"加载中…",ms:"Memuatkan…"},
  "Fully booked":{zh:"该时段已订满",ms:"Tempahan penuh"},
  "Reason for Rejection":{zh:"拒绝原因",ms:"Sebab Penolakan"},

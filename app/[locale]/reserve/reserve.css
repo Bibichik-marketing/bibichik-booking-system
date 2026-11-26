@@ -193,3 +193,5 @@ body{background:#f8f7f3}.reserve{max-width:1040px;padding-top:26px}.reserve>head
 .rejection-history{min-width:0;margin:20px 0;font-size:13px}
 .rejection-history article{padding:12px 0;border-bottom:1px solid #dce4e6}
 .rejection-reason-text{white-space:pre-wrap;overflow-wrap:anywhere}
+
+.incoming-booking-alert{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:18px;margin:16px 0;background:#e5f1f8;border:2px solid #90b9d0;border-radius:12px}.incoming-booking-alert>div{flex:1 1 240px;min-width:0}.incoming-booking-alert strong{font-size:18px}.incoming-booking-alert p{margin:6px 0 0;line-height:1.5}.incoming-booking-alert button{min-height:44px;padding:10px 16px;border:1px solid #90b9d0;border-radius:8px;background:#fff;color:inherit;font:inherit}

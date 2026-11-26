@@ -1,6 +1,7 @@
 export type StaffLanguage="en"|"zh"|"ms";
 export const staffCopy:Record<string,{zh:string;ms:string}>={
  "Loading…":{zh:"加载中…",ms:"Memuatkan…"},
+ "Fully booked":{zh:"该时段已订满",ms:"Tempahan penuh"},
  "Reason for Rejection":{zh:"拒绝原因",ms:"Sebab Penolakan"},
  "This reason will be shared with the customer via WhatsApp. Do not include internal notes or staff details.":{zh:"此原因将通过 WhatsApp 告知顾客。请勿包含内部备注或员工资料。",ms:"Sebab ini akan dikongsi dengan pelanggan melalui WhatsApp. Jangan masukkan nota dalaman atau butiran kakitangan."},
  "Enter a valid reason for rejection.":{zh:"请输入有效的拒绝原因。",ms:"Masukkan sebab penolakan yang sah."},

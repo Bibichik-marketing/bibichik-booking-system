@@ -1,5 +1,12 @@
 export type StaffLanguage="en"|"zh"|"ms";
 export const staffCopy:Record<string,{zh:string;ms:string}>={
+ "Go Back":{zh:"返回",ms:"Kembali"},
+ "Confirm Reject":{zh:"确认拒绝",ms:"Sahkan Penolakan"},
+ "Confirm Cancellation":{zh:"确认取消",ms:"Sahkan Pembatalan"},
+ "Cancel reservation":{zh:"取消预约",ms:"Batalkan tempahan"},
+ "Processing…":{zh:"处理中…",ms:"Sedang diproses…"},
+ "This reservation will be rejected. Please check the booking details before continuing.":{zh:"此预约将被拒绝。请核对预约资料后再继续。",ms:"Tempahan ini akan ditolak. Sila semak butiran tempahan sebelum meneruskan."},
+ "This reservation will be cancelled. Please check the booking details before continuing.":{zh:"此预约将被取消。请核对预约资料后再继续。",ms:"Tempahan ini akan dibatalkan. Sila semak butiran tempahan sebelum meneruskan."},
  "Send WhatsApp Rejection":{zh:"发送 WhatsApp 婉拒通知",ms:"Hantar penolakan WhatsApp"},
  "Confirm Reservation":{zh:"确认预约",ms:"Sahkan Tempahan"},
  "Reject reservation":{zh:"拒绝预约",ms:"Tolak tempahan"},

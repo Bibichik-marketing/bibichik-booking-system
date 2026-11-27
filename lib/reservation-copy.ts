@@ -13,3 +13,5 @@ export const partyCopy:Record<string,{exact:string;invalid:string}>={
  ko:{exact:'정확한 인원수',invalid:'16명에서 {max}명 사이의 정수를 입력해 주세요.'},
  ja:{exact:'正確な人数',invalid:'16名から{max}名までの整数を入力してください。'},
 };
+
+export const customerDateCopy:Record<string,string>={en:'Select a date',zh:'请选择日期',ms:'Pilih tarikh',ko:'날짜를 선택해 주세요',ja:'日付を選択してください'};

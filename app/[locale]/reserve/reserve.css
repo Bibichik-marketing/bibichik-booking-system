@@ -201,3 +201,16 @@ body{background:#f8f7f3}.reserve{max-width:1040px;padding-top:26px}.reserve>head
  .staff-shell .staff-filters>label{min-width:0;width:100%}
  .staff-shell .staff-filters>button{justify-self:start}
 }
+
+/* Customer-only native date sizing: include tablet Safari, without changing Staff controls. */
+.reserve-customer .reserve-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.reserve-customer .reserve-grid>label{min-width:0;min-inline-size:0;max-width:100%;max-inline-size:100%}
+.reserve-customer .reserve-grid :is(input,select){box-sizing:border-box;min-width:0;min-inline-size:0;max-width:100%;max-inline-size:100%;width:100%}
+.reserve-customer .reserve-grid input[type=date]{-webkit-appearance:auto;appearance:auto;inline-size:100%;min-height:48px;line-height:1.5;text-align:start}
+.reserve-customer .reserve-grid input[type=date]::-webkit-date-and-time-value{display:block;min-width:0;min-inline-size:0;min-height:1.5em;margin:0;padding:0;color:inherit;-webkit-text-fill-color:currentColor;text-align:left}
+.reserve-customer .reserve-grid input[type=date]::-webkit-datetime-edit,.reserve-customer .reserve-grid input[type=date]::-webkit-datetime-edit-fields-wrapper{min-width:0;padding:0}
+.reserve-customer .reserve-grid input[type=date]::-webkit-calendar-picker-indicator{flex-shrink:0;opacity:1;cursor:pointer}
+.customer-date-hint{display:block;font-size:12px;font-weight:400;margin-top:6px}
+@media(max-width:1024px){.reserve-customer .reserve-grid :is(input,select){font-size:16px}}
+@media(hover:none) and (pointer:coarse){.reserve-customer .reserve-grid :is(input,select){font-size:16px}}
+@media(max-width:600px){.reserve-customer .reserve-grid{grid-template-columns:minmax(0,1fr)}}

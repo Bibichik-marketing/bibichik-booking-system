@@ -185,3 +185,19 @@ body{background:#f8f7f3}.reserve{max-width:1040px;padding-top:26px}.reserve>head
 .rejection-reason-text{white-space:pre-wrap;overflow-wrap:anywhere}
 
 .incoming-booking-alert{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:18px;margin:16px 0;background:#e5f1f8;border:2px solid #90b9d0;border-radius:12px}.incoming-booking-alert>div{flex:1 1 240px;min-width:0}.incoming-booking-alert strong{font-size:18px}.incoming-booking-alert p{margin:6px 0 0;line-height:1.5}.incoming-booking-alert button{min-height:44px;padding:10px 16px;border:1px solid #90b9d0;border-radius:8px;background:#fff;color:inherit;font:inherit}
+
+/* Staff native date controls: constrain WebKit intrinsic sizing on phones AND tablets. */
+@media (max-width:1024px){
+ .staff-shell .staff-filters,.staff-shell .staff-list form,.staff-shell .staff-list form>label,.staff-shell .manual-panel .reserve-grid>label{min-inline-size:0;max-inline-size:100%}
+ .staff-shell .staff-list form>label{display:block}
+ .staff-shell input:is([type=date],[type=time],[type=datetime-local]){box-sizing:border-box;display:block;width:100%;inline-size:100%;min-width:0;min-inline-size:0;max-width:100%;max-inline-size:100%;min-height:44px;font-size:16px;text-align:start;appearance:auto;-webkit-appearance:auto}
+ .staff-shell input:is([type=date],[type=time],[type=datetime-local])::-webkit-date-and-time-value{min-inline-size:0;min-height:1.5em;text-align:left}
+ .staff-shell input:is([type=date],[type=time],[type=datetime-local])::-webkit-datetime-edit{min-inline-size:0;padding:0}
+ .staff-shell input:is([type=date],[type=time],[type=datetime-local])::-webkit-calendar-picker-indicator{flex-shrink:0;opacity:1;cursor:pointer}
+ .staff-shell .staff-list:has(>form input:is([type=date],[type=datetime-local])){overflow:visible}
+}
+@media (max-width:600px){
+ .staff-shell .staff-filters{display:grid;grid-template-columns:minmax(0,1fr);align-items:stretch}
+ .staff-shell .staff-filters>label{min-width:0;width:100%}
+ .staff-shell .staff-filters>button{justify-self:start}
+}

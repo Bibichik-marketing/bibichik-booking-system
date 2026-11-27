@@ -1,24 +1,24 @@
-# Staff date controls — responsive verification
+# Staff native dates and responsive reservation cards
 
-## Cause and scope
+## Root causes and implementation
 
-The previous native date/time input safeguards stopped at 760px, leaving 768–1024px tablet widths subject to WebKit intrinsic date-control sizing. Operation forms also retained inline labels above 760px, while Staff cards used overflow:hidden. On narrow phones, filters were only forced onto their own rows at 430px.
+CSS-only sizing still relied on WebKit's internal date editor to show text. That renderer can be blank or paint outside the control on iOS even when the outer input has a constrained width. StaffDateInput now provides visible date/time text (or translated prompt) and a calendar control independently of native value painting. The real native input remains the full-field hit target and retains its name, required/min/step attributes and ISO value. The handler focuses it before requesting showPicker in a trusted gesture; unsupported APIs retain native tap/focus behaviour. Focus-before-picker was needed for reliable native date commitment in local testing.
 
-This fix changes CSS only, scoped under .staff-shell and media queries up to 1024px. It sets explicit border-box/inline sizing for date, time and datetime-local inputs, preserves native picker appearance, gives WebKit date values a readable minimum height/alignment, and keeps calendar indicators from shrinking. Form labels constrain their children on tablets. Operation cards containing direct date forms allow overflow; native calendars remain browser/OS UI rather than custom popovers. Filters stack below 600px. Existing colors, typography, desktop rules above 1024px, native input types and all event handlers remain unchanged. Font size 16px on narrow native date controls avoids iOS focus zoom.
+The component covers the list date filter, timeline date, reservation edits, manual Staff bookings, schedule times and quota/closure datetime ranges. Controlled filters forward the original event to the existing setter; uncontrolled operation forms retain their edited ISO values for FormData. Date formatting only rearranges numeric components for display; Malaysia timezone handling and API conversions are unchanged. All blank prompts have English/Chinese/Malay translations. Customer date controls are unchanged; only the existing staffSource branch of the shared reservation form uses this Staff component.
 
-No date conversion, filtering logic, timezone, translation, booking payload, permissions, reservation rules, guest counts or rejection reasons changed. There is no new custom date picker or placeholder pretending to be native date content.
+The former list squeezed six desktop columns into phone widths. At <=1024px, the same table rows now form cards: full-width name/reference, readable date/time, outlet, guest count, status and the existing detail action. Translated data-label values provide the visual labels. No duplicate record list or new mobile action handlers exist. At >1024px, desktop table styles remain unchanged. Existing palette, fonts, status badges and action buttons are retained. Roles/API/database authorization remain untouched.
 
-## Verification
+## Validation
 
-- TypeScript, ESLint, all 159 automated tests and production build passed.
-- Used a separate hydrated local Next.js Staff demo copy without environment files, credentials or Supabase access. No forms were submitted.
-- 120 layout checks passed: Overview, Today's Reservations, Pending Approvals, Availability Timeline and Outlet Settings, in English/Chinese/Malay, at 320, 375, 390, 430, 768, 820, 1024 and 1440px. Date/time/datetime-local fields fit their form/filter containers and viewport, were at least 44px high, and introduced no horizontal page scrolling.
-- Reservation edit fields passed at all eight widths; manual booking date fields also passed at all eight widths.
-- Quota and closure start/end datetime values persisted across all three Staff languages. The existing selected list-filter date remained through navigation/language changes; Reset restored the fictional list.
-- Opened the native calendar through its visible picker control at a 375px viewport. Native keyboard selection advanced the date and applied the filter without clipping or status changes. Native popup cells were not directly actionable through the available automation; date selection was verified using its keyboard interface.
+- TypeScript, ESLint, all 167 tests and production build passed.
+- Added native field regression tests for three empty prompts, date/time/datetime values and original names/validation, picker fallback, exact controlled changes and persistence/clearing of uncontrolled operation values.
+- Used an isolated hydrated Next.js Staff demo copy without environment files, credentials or Supabase access. No reservation/settings forms were submitted.
+- 120 layout cases passed: Overview, Today, Pending, Availability Timeline and Outlet Settings, in English/Chinese/Malay, at 320, 375, 390, 430, 768, 820, 1024 and 1440px. No page overflow; date wrappers and native hit targets fit, displayed text and had >=44px targets. Cards contained all six original cells/labels at phone/tablet sizes; 1440px retained table-row layout.
+- Opened native calendar by clicking the whole field at 375px. With focus-before-picker, native keyboard date selection displayed 28/11/2026, forwarded 2026-11-28 and filtered fictional rows from six to zero. Reset cleared the filter and restored six rows. Existing card detail action opened Reservation Details and retained the edit date control.
+- Manual booking date controls passed all eight widths. No Production records were used or changed. Existing security, rejection-reason, reconfirmation, WhatsApp, notification and larger-party regression tests remain green.
 
-## Remaining physical-device checks
+## Device limitations / acceptance
 
-Viewport resizing is not full touch-device emulation. No physical iPhone/iPad Safari or Android device was controlled. On iPhone widths 320/375/390/430 and tablets 768/820/1024, verify actual touch opening/selection, native date text and icon visibility, portrait/landscape and software-keyboard behaviour. Check populated and empty date controls, edit dialogs, manual booking, timeline and date ranges. Native calendar placement and mute/keyboard/OS presentation cannot be guaranteed by desktop CSS inspection alone.
+The browser tools provided viewport resizing and pointer/native keyboard interaction, not full physical touchscreen emulation. No physical iPhone/iPad/Android was controlled. Before publication, check actual tap/selection and accessibility on iPhone Safari (320–430px), iPad Safari (768/820/1024px, portrait/landscape) and Android. Verify both empty and selected prompts, keyboard focus, native calendar selection, date ranges, card details and reset. Native calendar popups are browser/OS UI outside webpage clipping and screenshot capture.
 
-No Supabase connection/migration, Production reservation/settings change, Aburii modification or GoDaddy publication was performed. The isolated demo server was stopped after testing.
+No Supabase, migrations, capacities, booking rules, permissions, reservations, feature flags, Aburii or GoDaddy settings changed. The isolated test server was stopped after checks.

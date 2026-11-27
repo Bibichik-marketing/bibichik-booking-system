@@ -225,3 +225,25 @@ body{background:#f8f7f3}.reserve{max-width:1040px;padding-top:26px}.reserve>head
 
 @media(max-width:1024px){.reserve-customer .customer-date-control{font-size:16px}}
 @media(hover:none) and (pointer:coarse){.reserve-customer .customer-date-control{font-size:16px}}
+
+/* Staff native picker: visible value independent of WebKit internal editor painting. */
+.staff-shell .staff-native-date{position:relative;display:block;box-sizing:border-box;min-width:0;min-inline-size:0;width:100%;max-width:100%;margin-top:7px;padding:11px 12px;border:1px solid #dce5eb;border-radius:5px;background:white;color:#375866;min-height:44px;font:inherit;font-size:12px}
+.staff-native-date-display{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;pointer-events:none}
+.staff-native-date-display>span{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.staff-native-date-display svg{flex-shrink:0}
+.staff-shell .staff-native-date>input:is([type=date],[type=time],[type=datetime-local]){position:absolute;inset:0;z-index:1;box-sizing:border-box;width:100%;height:100%;min-width:0;min-inline-size:0;max-width:100%;margin:0;padding:0;border:0;opacity:0;cursor:pointer}
+.staff-shell .staff-native-date:focus-within{outline:3px solid #35758b;outline-offset:4px}
+@media(max-width:1024px){
+ .staff-shell .staff-native-date{font-size:16px}
+ .staff-shell .reservation-table{overflow:visible}
+ .staff-shell .reservation-table table{display:block;width:100%;min-width:0}
+ .staff-shell .reservation-table thead{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+ .staff-shell .reservation-table tbody{display:grid;gap:12px;padding:0 16px 16px;min-width:0}
+ .staff-shell .reservation-table tbody tr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:14px;border:1px solid #e0e8ed;border-radius:8px;background:white;min-width:0}
+ .staff-shell .reservation-table tbody td{display:block;min-width:0;padding:0;border:0;white-space:normal;overflow-wrap:anywhere}
+ .staff-shell .reservation-table tbody td::before{content:attr(data-label);display:block;margin-bottom:4px;font-size:10px;color:#748b97}
+ .staff-shell .reservation-table tbody td:first-child,.staff-shell .reservation-table tbody td:last-child{grid-column:1/-1}
+ .staff-shell .reservation-table tbody td:first-child::before,.staff-shell .reservation-table tbody td:last-child::before{display:none}
+ .staff-shell .reservation-table .guest-link{text-align:left;max-width:100%;white-space:normal}
+ .staff-shell .reservation-table .detail-button{width:100%;min-height:44px;text-align:right}
+}

@@ -8,6 +8,7 @@ export async function POST(request:Request) {
  try {
  const parsed=reservationSchema.safeParse(await readJson(request));
  if(!parsed.success) return Response.json({error:'Invalid fields'},{status:400});
+ if(parsed.data.guests>10&&process.env.CUSTOMER_LARGE_PARTIES_ENABLED!=='true')return Response.json({error:'Large party booking is not enabled',slots:[]},{status:503});
  const token=issueStatusToken();
  const booking=await bookingRpc('booking_create_v2',{payload:{...parsed.data,time:parsed.data.slotId},token_hash:hashStatusToken(token)});
  return Response.json({booking,statusToken:booking.replayed?undefined:token},{headers:{'Cache-Control':'no-store'}});

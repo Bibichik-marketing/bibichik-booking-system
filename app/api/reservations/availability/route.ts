@@ -4,6 +4,7 @@ import { selectionSchema } from '@/lib/reservations';
 export async function GET(request:Request) {
  const parsed=selectionSchema.safeParse(Object.fromEntries(new URL(request.url).searchParams));
  if(!parsed.success) return Response.json({slots:[]},{status:400});
+ if(parsed.data.guests>10&&process.env.CUSTOMER_LARGE_PARTIES_ENABLED!=='true')return Response.json({error:'Large party booking is not enabled',slots:[]},{status:503});
  try { if(new URL(request.url).searchParams.get('channel')==='Phone'){const token=await staffToken();return Response.json({slots:await supabaseRequest('/rest/v1/rpc/staff_availability_v2',token,{outlet:parsed.data.outletId,day:parsed.data.date,party:parsed.data.guests})},{headers:{'Cache-Control':'no-store'}})}return Response.json({slots:await bookingRpc('reservation_availability',{outlet:parsed.data.outletId,day:parsed.data.date,party:parsed.data.guests})},{headers:{'Cache-Control':'no-store'}}); }
  catch { return Response.json({slots:[],unavailable:true},{headers:{'Cache-Control':'no-store'}}); }
 }

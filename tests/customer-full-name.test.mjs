@@ -13,21 +13,11 @@ test('status page supports proposed Full Name response and preserves legacy disp
 
 test('WhatsApp confirmation preserves the exact Full Name stored for staff',async()=>{const {confirmationMessage}=await import(uri(compile('lib/whatsapp.ts')));const name='Synthetic Full Name Test';const message=confirmationMessage({status:'Confirmed',customer_name:name,phone:'0123456789',outlet_id:'bibichik-ss2',reservation_date:'2099-01-02',reservation_time:'19:00',guests:2,reference:'SYNTHETIC'});assert.ok(message.includes('Hi '+name+'!'));});
 
-test('group enquiries use official outlet numbers and localized messages without changing the online guest limit',async()=>{
- const {restaurantContacts,customerContactCopy,groupReservationLink}=await import(copyUrl);
- assert.equal(groupReservationLink('unknown','en'),null);assert.equal(groupReservationLink('bibichik-ss2','unknown'),null);
- for(const locale of ['en','zh','ms','ko','ja'])for(const contact of restaurantContacts){
-  const url=new URL(groupReservationLink(contact.id,locale));
-  assert.equal(url.origin,'https://wa.me');assert.equal(url.pathname,'/'+(contact.id==='bibichik-ss2'?'601170233354':'601162147497'));
-  assert.equal(url.searchParams.get('text'),customerContactCopy[locale].enquiry(contact.name));assert.ok(url.searchParams.get('text').includes(contact.name));
-  const react=uri('let n=0;export const useEffect=()=>{};export const useRef=()=>({current:null});export function useState(v){const i=n++;return [i===1?'+JSON.stringify(contact.id)+':v,()=>{}]}//'+locale+contact.id);
-  const map={react,'react/jsx-runtime':import.meta.resolve('react/jsx-runtime'),'lucide-react':import.meta.resolve('lucide-react'),'@/lib/status-copy':statusUrl,'@/lib/reservations':reservationsUrl,'@/lib/reservation-copy':copyUrl,'@/lib/customer-name':nameUrl,'./CustomerLanguageSelector':uri('export default function Selector(){return null}'),'./useCustomerLocale':uri('export const useCustomerLocale=locale=>({locale,switchLocale(){}})')};
-  const {default:Reservation}=await import(uri(compile('components/reservation/Reservation.tsx').replace(/from (['"])(.*?)\1/g,(_a,_q,name)=>'from '+JSON.stringify(map[name]??name))));
-  const html=renderToStaticMarkup(createElement(Reservation,{locale,demo:true}));
-  assert.ok(html.includes(customerContactCopy[locale].notice));assert.ok(html.includes(customerContactCopy[locale].heading));
-  const links=[...html.matchAll(/<a href="(https:\/\/wa.me\/[^\"]+)" target="_blank" rel="noopener noreferrer"/g)].map(match=>match[1].replaceAll('&amp;','&'));
-  assert.equal(links.length,3);assert.equal(links[0],url.href);assert.equal(links[1],groupReservationLink('bibichik-sunway-163',locale));assert.equal(links[2],groupReservationLink('bibichik-ss2',locale));
-  assert.ok(html.includes('011-6214 7497'));assert.ok(html.includes('011-7023 3354'));
-  assert.equal((html.match(/<option /g)||[]).length,10);assert.ok(!html.includes('<option value="11"'));
+test('customer form removes every WhatsApp contact and offers gated exact larger-party counts in all five languages',async()=>{
+ for(const locale of ['en','zh','ms','ko','ja'])for(const expandedGuests of [false,true])for(const large of [false,true]){
+ const react=uri('let n=0;export const useEffect=()=>{};export const useRef=()=>({current:null});export function useState(v){const i=n++;return [i===4?'+large+':i===5?"16":v,()=>{}]}//'+locale+expandedGuests+large);
+ const map={react,'react/jsx-runtime':import.meta.resolve('react/jsx-runtime'),'lucide-react':import.meta.resolve('lucide-react'),'@/lib/status-copy':statusUrl,'@/lib/reservations':reservationsUrl,'@/lib/reservation-copy':copyUrl,'@/lib/customer-name':nameUrl,'./CustomerLanguageSelector':uri('export default function Selector(){return null}'),'./useCustomerLocale':uri('export const useCustomerLocale=locale=>({locale,switchLocale(){}})')};
+ const {default:Reservation}=await import(uri(compile('components/reservation/Reservation.tsx').replace(/from (['"])(.*?)\1/g,(_a,_q,name)=>'from '+JSON.stringify(map[name]??name))));
+ const html=renderToStaticMarkup(createElement(Reservation,{locale,demo:true,expandedGuests}));assert.ok(!/wa\.me|WhatsApp|011-6214|011-7023/.test(html));assert.equal((html.match(/<option /g)||[]).length,expandedGuests?16:10);assert.equal(html.includes('value="15+"'),expandedGuests);if(large){assert.ok(html.includes('type="number"'));assert.ok(html.includes('min="16"'));assert.ok(html.includes('value="16"'));}
  }
 });

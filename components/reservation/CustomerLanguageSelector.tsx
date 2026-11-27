@@ -6,7 +6,9 @@ export default function CustomerLanguageSelector({locale,onSelect}:{locale:strin
  const container=useRef<HTMLDetailsElement>(null);const summary=useRef<HTMLElement>(null);
  const current=customerLanguages.find(l=>l.code===locale)??customerLanguages[0];
  useEffect(()=>{function close(event:PointerEvent){if(event.target instanceof Node&&!container.current?.contains(event.target)&&container.current)container.current.open=false;}document.addEventListener('pointerdown',close);return()=>document.removeEventListener('pointerdown',close);},[]);
- return <details className="customer-language" ref={container} onBlur={event=>{if(!event.currentTarget.contains(event.relatedTarget as Node|null))event.currentTarget.open=false;}} onKeyDown={event=>{
+ return <details className="customer-language" ref={container} onBlur={event=>{// Safari touch taps may blur summary with a null relatedTarget before option click.
+  // Only close for a known outside focus target; outside pointerdown/Escape still dismiss.
+  if(event.relatedTarget&&!event.currentTarget.contains(event.relatedTarget as Node))event.currentTarget.open=false;}} onKeyDown={event=>{
   if(event.key==='Escape'){event.preventDefault();event.currentTarget.open=false;summary.current?.focus();}
   if(['ArrowDown','ArrowUp','Home','End'].includes(event.key)){event.preventDefault();event.currentTarget.open=true;const options=Array.from(event.currentTarget.querySelectorAll('button'));const index=options.indexOf(document.activeElement as HTMLButtonElement);const next=event.key==='Home'?0:event.key==='End'?options.length-1:index<0?customerLanguages.indexOf(current):(index+(event.key==='ArrowUp'?-1:1)+options.length)%options.length;options[next]?.focus();}
  }}>

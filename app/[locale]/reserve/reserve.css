@@ -214,3 +214,14 @@ body{background:#f8f7f3}.reserve{max-width:1040px;padding-top:26px}.reserve>head
 @media(max-width:1024px){.reserve-customer .reserve-grid :is(input,select){font-size:16px}}
 @media(hover:none) and (pointer:coarse){.reserve-customer .reserve-grid :is(input,select){font-size:16px}}
 @media(max-width:600px){.reserve-customer .reserve-grid{grid-template-columns:minmax(0,1fr)}}
+
+/* Visible date text is independent of iOS native editor painting; the native input owns every tap. */
+.reserve-customer .customer-date-control{position:relative;display:block;box-sizing:border-box;width:100%;inline-size:100%;min-width:0;min-inline-size:0;max-width:100%;max-inline-size:100%;min-height:48px;margin-top:8px;padding:12px;border:1px solid #cbdbe2;border-radius:4px;background:white;color:var(--ink);overflow:hidden;font:inherit}
+.customer-date-display{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0;min-height:22px;pointer-events:none}
+.customer-date-display>span{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.customer-date-display svg{flex-shrink:0}
+.reserve.reserve-customer .customer-date-control>input[type=date]{position:absolute;inset:0;z-index:1;display:block;box-sizing:border-box;width:100%;height:100%;min-width:0;min-inline-size:0;max-width:100%;max-inline-size:100%;margin:0;padding:0;border:0;opacity:0;cursor:pointer}
+.reserve-customer .customer-date-control:focus-within{outline:3px solid #35758b;outline-offset:4px}
+
+@media(max-width:1024px){.reserve-customer .customer-date-control{font-size:16px}}
+@media(hover:none) and (pointer:coarse){.reserve-customer .customer-date-control{font-size:16px}}
